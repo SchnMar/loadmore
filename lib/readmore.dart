@@ -13,8 +13,8 @@ class ReadMoreText extends StatefulWidget {
   const ReadMoreText(
     this.data, {
     Key key,
-    this.trimExpandedText = ' read less',
-    this.trimCollapsedText = ' ...read more',
+    this.trimExpandedText = 'show less',
+    this.trimCollapsedText = 'read more',
     this.colorClickableText,
     this.trimLength = 240,
     this.trimLines = 2,
@@ -25,11 +25,18 @@ class ReadMoreText extends StatefulWidget {
     this.locale,
     this.textScaleFactor,
     this.semanticsLabel,
-    this.onHashTagTap,
-    this.hashTagStyle,
+    this.moreStyle,
+    this.lessStyle,
+    this.delimiter = '... ',
+    this.delimiterStyle,
+    this.callback,
+        this.onHashTagTap,
+        this.hashTagStyle,
+        this.decorateAtSign,
   })  : assert(data != null),
         super(key: key);
 
+  final String delimiter;
   final String data;
   final String trimExpandedText;
   final String trimCollapsedText;
@@ -38,13 +45,20 @@ class ReadMoreText extends StatefulWidget {
   final int trimLines;
   final TrimMode trimMode;
   final TextStyle style;
-  final TextStyle hashTagStyle;
   final TextAlign textAlign;
   final TextDirection textDirection;
   final Locale locale;
   final double textScaleFactor;
   final String semanticsLabel;
+  final TextStyle moreStyle;
+  final TextStyle lessStyle;
+  final TextStyle delimiterStyle;
+  final Function(bool val) callback;
+
+  //Hashtaggable
   final Function onHashTagTap;
+  final TextStyle hashTagStyle;
+  final bool decorateAtSign;
 
   @override
   ReadMoreTextState createState() => ReadMoreTextState();
@@ -58,7 +72,10 @@ class ReadMoreTextState extends State<ReadMoreText> {
   bool _readMore = true;
 
   void _onTapLink() {
-    setState(() => _readMore = !_readMore);
+    setState((){
+    _readMore = !_readMore;
+    widget.callback?.call(_readMore);
+    });
   }
 
   @override
@@ -77,15 +94,29 @@ class ReadMoreTextState extends State<ReadMoreText> {
     final overflow = defaultTextStyle.overflow;
     final locale =
         widget.locale ?? Localizations.localeOf(context, nullOk: true);
-
     final colorClickableText =
         widget.colorClickableText ?? Theme.of(context).accentColor;
+    final _defaultLessStyle = widget.lessStyle ??
+        effectiveTextStyle.copyWith(color: colorClickableText);
+    final _defaultMoreStyle = widget.moreStyle ??
+        effectiveTextStyle.copyWith(color: colorClickableText);
+    final _defaultDelimiterStyle = widget.delimiterStyle ?? effectiveTextStyle;
 
     TextSpan link = TextSpan(
       text: _readMore ? widget.trimCollapsedText : widget.trimExpandedText,
-      style: effectiveTextStyle.copyWith(
-        color: colorClickableText,
-      ),
+      style: _readMore ? _defaultMoreStyle : _defaultLessStyle,
+      recognizer: TapGestureRecognizer()..onTap = _onTapLink,
+    );
+
+    TextSpan _delimiter = TextSpan(
+      text: _readMore
+          ? widget.trimCollapsedText.isNotEmpty
+              ? widget.delimiter
+              : ''
+          : widget.trimExpandedText.isNotEmpty
+              ? widget.delimiter
+              : '',
+      style: _defaultDelimiterStyle,
       recognizer: TapGestureRecognizer()..onTap = _onTapLink,
     );
 
@@ -110,7 +141,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
           ellipsis: overflow == TextOverflow.ellipsis ? _kEllipsis : null,
           locale: locale,
         );
-        textPainter.layout(minWidth: constraints.minWidth, maxWidth: maxWidth);
+        textPainter.layout(minWidth: 0, maxWidth: maxWidth);
         final linkSize = textPainter.size;
 
         // Layout and measure text
@@ -141,13 +172,14 @@ class ReadMoreTextState extends State<ReadMoreText> {
           case TrimMode.Length:
             if (widget.trimLength < widget.data.length) {
               textSpan = getHashTagTextSpan(
-                  decoratedStyle: widget.hashTagStyle,
-                  basicStyle: effectiveTextStyle,
-                  source: _readMore
-                      ? widget.data.substring(0, widget.trimLength)
-                      : widget.data,
-                  onTap: widget.onHashTagTap,
-                  children: <TextSpan>[link]);
+                decoratedStyle: widget.hashTagStyle,
+                basicStyle: effectiveTextStyle,
+                source: _readMore
+                    ? widget.data.substring(0, widget.trimLength)
+                    : widget.data,
+                onTap: widget.onHashTagTap,
+                children: <TextSpan>[_delimiter, link],
+              );
             } else {
               textSpan = getHashTagTextSpan(
                 source: widget.data,
@@ -167,7 +199,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
                         (linkLongerThanLine ? _kLineSeparator : '')
                     : widget.data,
                 onTap: widget.onHashTagTap,
-                children: <TextSpan>[link],
+                children: <TextSpan>[_delimiter, link],
               );
             } else {
               textSpan = getHashTagTextSpan(
