@@ -30,9 +30,9 @@ class ReadMoreText extends StatefulWidget {
     this.delimiter = '... ',
     this.delimiterStyle,
     this.callback,
-        this.onHashTagTap,
-        this.hashTagStyle,
-        this.decorateAtSign,
+    this.onHashTagTap,
+    this.hashTagStyle,
+    this.decorateAtSign,
   })  : assert(data != null),
         super(key: key);
 
@@ -72,9 +72,9 @@ class ReadMoreTextState extends State<ReadMoreText> {
   bool _readMore = true;
 
   void _onTapLink() {
-    setState((){
-    _readMore = !_readMore;
-    widget.callback?.call(_readMore);
+    setState(() {
+      _readMore = !_readMore;
+      widget.callback?.call(_readMore);
     });
   }
 
@@ -179,6 +179,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
                     : widget.data,
                 onTap: widget.onHashTagTap,
                 children: <TextSpan>[_delimiter, link],
+                decorateAtSign: widget.decorateAtSign,
               );
             } else {
               textSpan = getHashTagTextSpan(
@@ -186,6 +187,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
                 basicStyle: effectiveTextStyle,
                 decoratedStyle: widget.hashTagStyle,
                 onTap: widget.onHashTagTap,
+                decorateAtSign: widget.decorateAtSign,
               );
             }
             break;
@@ -200,6 +202,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
                     : widget.data,
                 onTap: widget.onHashTagTap,
                 children: <TextSpan>[_delimiter, link],
+                decorateAtSign: widget.decorateAtSign,
               );
             } else {
               textSpan = getHashTagTextSpan(
@@ -207,6 +210,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
                 basicStyle: effectiveTextStyle,
                 decoratedStyle: widget.hashTagStyle,
                 onTap: widget.onHashTagTap,
+                decorateAtSign: widget.decorateAtSign,
               );
             }
             break;
